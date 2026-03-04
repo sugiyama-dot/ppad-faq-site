@@ -34,25 +34,23 @@
     .history-list { flex: 1; overflow-y: auto; padding: 4px 8px; }
     .history-item {
       display: flex; align-items: center; gap: 6px;
-      padding: 10px 12px; border-radius: 8px; font-size: 13px;
-      color: #ccc; transition: background 0.15s;
+      padding: 10px 12px; border-radius: 8px; font-size: 13px; color: #ccc;
     }
-    .history-item:hover { background: #2a2a2a; color: white; }
     .history-item .label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .delete-btn {
       background: none; border: none; color: #555; cursor: pointer;
       font-size: 14px; padding: 2px 4px; border-radius: 4px;
       flex-shrink: 0; visibility: hidden;
     }
+    .history-item:hover { background: #2a2a2a; color: white; }
     .history-item:hover .delete-btn { visibility: visible; }
     .delete-btn:hover { color: var(--red); background: #333; }
     .history-empty { padding: 16px; font-size: 12px; color: #666; text-align: center; }
 
-    /* コンテンツ：iframeを常時表示 */
+    /* コンテンツ */
     .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
     .iframe-wrap { flex: 1; overflow: hidden; }
-    .iframe-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
-
+    iframe { width: 100%; height: 100%; border: none; display: block; }
     footer { text-align: center; padding: 8px; font-size: 11px; color: #aaa; background: white; border-top: 1px solid #f0f0f0; flex-shrink: 0; }
   </style>
 </head>
@@ -89,16 +87,18 @@
   const DIFY_URL = 'https://udify.app/chatbot/cbgcJILonn2PFH83';
   let histories = [];
 
-  // 新規で質問：iframeをリロードして履歴に追加
   function newChat() {
+    // セッション記録
     const id = Date.now();
-    const label = '質問 ' + new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
-    histories.unshift({ id, label });
+    const now = new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+    histories.unshift({ id, label: '質問セッション ' + now });
     renderHistory();
-    document.getElementById('difyFrame').src = DIFY_URL;
+    // iframeをリロードして新しいセッション開始
+    const f = document.getElementById('difyFrame');
+    f.src = '';
+    setTimeout(() => { f.src = DIFY_URL; }, 100);
   }
 
-  // 履歴削除
   function deleteHistory(e, id) {
     e.stopPropagation();
     histories = histories.filter(h => h.id !== id);
@@ -114,7 +114,7 @@
     list.innerHTML = histories.map(h => `
       <div class="history-item">
         <span class="label">💬 ${h.label}</span>
-        <button class="delete-btn" onclick="deleteHistory(event, ${h.id})" title="削除">🗑</button>
+        <button class="delete-btn" onclick="deleteHistory(event, ${h.id})">🗑</button>
       </div>
     `).join('');
   }
