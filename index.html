@@ -35,7 +35,7 @@
     .history-item {
       display: flex; align-items: center; gap: 6px;
       padding: 10px 12px; border-radius: 8px; font-size: 13px;
-      color: #ccc; cursor: default; transition: background 0.15s;
+      color: #ccc; transition: background 0.15s;
     }
     .history-item:hover { background: #2a2a2a; color: white; }
     .history-item .label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -48,34 +48,9 @@
     .delete-btn:hover { color: var(--red); background: #333; }
     .history-empty { padding: 16px; font-size: 12px; color: #666; text-align: center; }
 
-    /* コンテンツ */
+    /* コンテンツ：iframeを常時表示 */
     .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-
-    /* ウェルカム */
-    .welcome {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 32px 20px; text-align: center; background: #f5f5f5;
-    }
-    .welcome-icon {
-      width: 56px; height: 56px; background: var(--red); border-radius: 14px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 16px; box-shadow: 0 4px 16px rgba(232,0,29,0.3);
-    }
-    .welcome-icon span { font-size: 26px; }
-    .welcome h2 { font-size: 20px; color: #1a1a1a; margin-bottom: 8px; }
-    .welcome p { font-size: 13px; color: #666; margin-bottom: 28px; }
-    .examples { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-width: 560px; width: 100%; }
-    .example-btn {
-      background: white; border: 1px solid #e0e0e0; border-radius: 10px;
-      padding: 12px 14px; font-size: 12px; color: #333; cursor: pointer;
-      text-align: left; line-height: 1.5; transition: all 0.2s;
-    }
-    .example-btn:hover { border-color: var(--red); color: var(--red); box-shadow: 0 2px 8px rgba(232,0,29,0.1); }
-    .example-btn .icon { font-size: 15px; margin-bottom: 4px; display: block; }
-
-    /* iframe：チャット開始後に全面表示 */
-    .iframe-wrap { display: none; flex: 1; overflow: hidden; }
+    .iframe-wrap { flex: 1; overflow: hidden; }
     .iframe-wrap iframe { width: 100%; height: 100%; border: none; display: block; }
 
     footer { text-align: center; padding: 8px; font-size: 11px; color: #aaa; background: white; border-top: 1px solid #f0f0f0; flex-shrink: 0; }
@@ -103,33 +78,9 @@
   </div>
 
   <div class="content">
-
-    <!-- ウェルカム画面 -->
-    <div class="welcome" id="welcome">
-      <div class="welcome-icon"><span>💬</span></div>
-      <h2>PPADに関して、お気軽にお問い合わせください</h2>
-      <p>広告配信・位置情報・入稿規定・料金など、何でもご質問ください。</p>
-      <div class="examples">
-        <button class="example-btn" onclick="startChat('最低出稿金額を教えてください')">
-          <span class="icon">💰</span>最低出稿金額を教えてください
-        </button>
-        <button class="example-btn" onclick="startChat('Google出稿時の入稿規程を教えてください')">
-          <span class="icon">📋</span>Google出稿時の入稿規程を教えてください
-        </button>
-        <button class="example-btn" onclick="startChat('いつから出稿可能か日付を教えてください')">
-          <span class="icon">📅</span>いつから出稿可能か日付を教えてください
-        </button>
-        <button class="example-btn" onclick="startChat('エリアターゲティングの最小単位を教えてください')">
-          <span class="icon">📍</span>エリアターゲティングの最小単位を教えてください
-        </button>
-      </div>
+    <div class="iframe-wrap">
+      <iframe id="difyFrame" src="https://udify.app/chatbot/cbgcJILonn2PFH83" allow="microphone"></iframe>
     </div>
-
-    <!-- Dify iframe：ウェルカム画面と排他表示 -->
-    <div class="iframe-wrap" id="iframeWrap">
-      <iframe id="difyFrame" src="" allow="microphone"></iframe>
-    </div>
-
     <footer>© 2026 BlogWatcher Inc. ｜ サポート受付：月〜金 10:00〜18:00</footer>
   </div>
 </div>
@@ -137,28 +88,13 @@
 <script>
   const DIFY_URL = 'https://udify.app/chatbot/cbgcJILonn2PFH83';
   let histories = [];
-  let currentId = null;
 
-  // 新規で質問：ウェルカム画面に戻す
+  // 新規で質問：iframeをリロードして履歴に追加
   function newChat() {
-    currentId = null;
-    document.getElementById('welcome').style.display = 'flex';
-    document.getElementById('iframeWrap').style.display = 'none';
-    document.getElementById('difyFrame').src = '';
-    renderHistory();
-  }
-
-  // 質問例クリック or 直接チャット開始
-  function startChat(label) {
     const id = Date.now();
-    const short = label.length > 20 ? label.slice(0, 20) + '…' : label;
-    histories.unshift({ id, label: short });
-    currentId = id;
+    const label = '質問 ' + new Date().toLocaleTimeString('ja-JP', {hour: '2-digit', minute: '2-digit'});
+    histories.unshift({ id, label });
     renderHistory();
-
-    // ウェルカムを隠してiframeを表示
-    document.getElementById('welcome').style.display = 'none';
-    document.getElementById('iframeWrap').style.display = 'flex';
     document.getElementById('difyFrame').src = DIFY_URL;
   }
 
@@ -166,8 +102,7 @@
   function deleteHistory(e, id) {
     e.stopPropagation();
     histories = histories.filter(h => h.id !== id);
-    if (currentId === id) newChat();
-    else renderHistory();
+    renderHistory();
   }
 
   function renderHistory() {
@@ -177,7 +112,7 @@
       return;
     }
     list.innerHTML = histories.map(h => `
-      <div class="history-item ${h.id === currentId ? 'active' : ''}">
+      <div class="history-item">
         <span class="label">💬 ${h.label}</span>
         <button class="delete-btn" onclick="deleteHistory(event, ${h.id})" title="削除">🗑</button>
       </div>
